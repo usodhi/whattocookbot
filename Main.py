@@ -16,6 +16,12 @@ auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth)
 
 try:
-    pass
+    streamListener = tweepy.StreamListener(api)
+    streamListener.on_error = lambda error: print(error)
+    streamListener.on_connect = lambda a: print(a)
+    stream = tweepy.Stream(api.auth, streamListener)
+    
+    stream.filter(track=['python'])
+
 except TweepError as e:
     print(f"TweepError: \nargs:{e.api_code}\nreason:{e.reason}\nresponse:{e.response}")
