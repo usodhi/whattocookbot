@@ -4,6 +4,7 @@ import tweepy
 from tweepy.error import TweepError
 from dotenv import load_dotenv
 import os
+import sys
 
 # loads environment variables from .env into OS
 load_dotenv('.env')
@@ -18,15 +19,68 @@ auth = tweepy.OAuthHandler(CONSUMER_API_KEY, CONSUMER_API_SECRET_KEY)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 api = tweepy.API(auth)
-api.get_user()
 
 def on_status(tweet):
-    if APP_HANDLE in map(lambda x: x['screen_name'], tweet.entities['user_mentions']):
+    if APP_HANDLE in map(lambda x: x['screen_name'], tweet.entities['user_mentions']) and tweet.in_reply_to_status_id is None:
         meal = get_random_meal()
-        # api.media_upload()
+        filename = get_image(meal['imageUrl'])
+        api.update_with_media(filename, status=get_status(meal, tweet.user.screen_name), in_reply_to_status_id=tweet.id, auto_populate_reply_metadata=True)
+        os.remove(filename)
+        print("Tweet complete!")
 
 def get_image(url):
-    pass
+    filename = 'temp.jpg'
+    r = requests.get(url, stream=True)
+    if not r.status_code == 200:
+        print(f"Error: could not fetch image, code {r.status_code}")
+        sys.exit(1)
+
+    try:
+        with open(filename, 'wb') as image:
+            for chunk in r:
+                image.write(chunk)
+    except Exception as e:
+        print(e)
+        
+    return filename
+
+def get_status(meal, reply_to_screen_name):
+    name = meal['name']
+    dishType = meal['dishType']
+    geoLocation = meal['geoLocation']
+    instructions = meal['instructions']
+    ingredients = meal['ingredients']
+    source = meal['source']
+    videoUrl = meal['videoUrl']
+
+    print(instructions)
+
+    status = f'''@{reply_to_screen_name}
+Name: {name}
+Type: {dishType}
+Location: {geoLocation}
+Source: {source}
+Video: {videoUrl}
+    '''
+    print(status)
+    return status
+
+    '''
+    name = dish['strMeal']
+    dishType = dish['strCategory']
+    geoLocation = dish['strArea']
+    instructions = dish['strInstructions']
+    imageUrl = dish['strMealThumb']
+    videoUrl = dish['strYoutube']
+    ingredients = [{dish[f'strIngredient{i}']:dish[f'strMeasure{i}']}
+               for i in range(1, 21) if dish[f'strIngredient{i}'] != ""]
+    source = dish['strSource']
+    meal = dict(name=name, dishType=dishType, geoLocation=geoLocation, ingredients=ingredients, instructions=instructions, imageUrl=imageUrl, videoUrl=videoUrl, source=source)
+    return meal
+    
+    
+    
+    '''
 
 try:
     streamListener = tweepy.StreamListener(api)

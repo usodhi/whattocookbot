@@ -2,6 +2,9 @@ import requests
 
 def get_random_meal():
     r = requests.get('https://www.themealdb.com/api/json/v1/1/random.php')
+
+    if not r.status_code == 200:
+        print(f"Error: could not get random meal from TheMealDB, code {r.status_code}")
     j = r.json()
     dish = dict(j['meals'][0])
 
