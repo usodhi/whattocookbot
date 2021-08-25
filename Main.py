@@ -12,22 +12,27 @@ CONSUMER_API_KEY = os.getenv('CONSUMER_API_KEY')
 CONSUMER_API_SECRET_KEY = os.getenv('CONSUMER_API_SECRET_KEY')
 ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
 ACCESS_TOKEN_SECRET = os.getenv('ACCESS_TOKEN_SECRET')
-
-APP_HANDLE = 'whattocookbot'
+PORT = int(os.getenv('PORT', 8080)) # needed for Google Cloud Run, if I decide to do that
+# will also then need to listen on this port, so figure out how (socket? more likely Flask)
 
 auth = tweepy.OAuthHandler(CONSUMER_API_KEY, CONSUMER_API_SECRET_KEY)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 api = tweepy.API(auth)
 
+screen_name = api.me().screen_name
+
 # run whenever the stream detects a new tweet
 def on_status(tweet):
-    if APP_HANDLE in map(lambda x: x['screen_name'], tweet.entities['user_mentions']) and tweet.in_reply_to_status_id is None: # checks that the handle is in the mentioned users list
-        meal = get_random_meal()
-        filename = get_image(meal['imageUrl'])
-        api.update_with_media(filename, status=get_status(meal, tweet.user.screen_name), in_reply_to_status_id=tweet.id, auto_populate_reply_metadata=True)
-        os.remove(filename)
-        print("Tweet complete!")
+    if screen_name in map(lambda x: x['screen_name'], tweet.entities['user_mentions']) and tweet.in_reply_to_status_id is None: # checks that the handle is in the mentioned users list
+        try:
+            meal = get_random_meal()
+            filename = get_image(meal['imageUrl'])
+            api.update_with_media(filename, status=get_status(meal, tweet.user.screen_name), in_reply_to_status_id=tweet.id, auto_populate_reply_metadata=True)
+            os.remove(filename) # deletes the image file created
+            print("Tweet complete!")
+        except Exception as e:
+            print("Error: " + str(e))
 
 # creates an image from the image url and returns the filename created
 def get_image(url):
@@ -42,7 +47,7 @@ def get_image(url):
             for chunk in r:
                 image.write(chunk)
     except Exception as e:
-        print(e)
+        print("Error:" + str(e))
         
     return filename
 

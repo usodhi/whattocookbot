@@ -1,6 +1,8 @@
 import sys
 import requests
 
+# this doesn't need to be a whole class but it's here in case I want to expand its capabilities
+
 # returns a meal dict from themealdb
 def get_random_meal():
     r = requests.get('https://www.themealdb.com/api/json/v1/1/random.php')
