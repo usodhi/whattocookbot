@@ -20,14 +20,16 @@ auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 api = tweepy.API(auth)
 
+# run whenever the stream detects a new tweet
 def on_status(tweet):
-    if APP_HANDLE in map(lambda x: x['screen_name'], tweet.entities['user_mentions']) and tweet.in_reply_to_status_id is None:
+    if APP_HANDLE in map(lambda x: x['screen_name'], tweet.entities['user_mentions']) and tweet.in_reply_to_status_id is None: # checks that the handle is in the mentioned users list
         meal = get_random_meal()
         filename = get_image(meal['imageUrl'])
         api.update_with_media(filename, status=get_status(meal, tweet.user.screen_name), in_reply_to_status_id=tweet.id, auto_populate_reply_metadata=True)
         os.remove(filename)
         print("Tweet complete!")
 
+# creates an image from the image url and returns the filename created
 def get_image(url):
     filename = 'temp.jpg'
     r = requests.get(url, stream=True)
@@ -44,16 +46,13 @@ def get_image(url):
         
     return filename
 
+# returns text of the tweet
 def get_status(meal, reply_to_screen_name):
     name = meal['name']
     dishType = meal['dishType']
     geoLocation = meal['geoLocation']
-    instructions = meal['instructions']
-    ingredients = meal['ingredients']
     source = meal['source']
     videoUrl = meal['videoUrl']
-
-    print(instructions)
 
     status = f'''@{reply_to_screen_name}
 Name: {name}
@@ -64,6 +63,7 @@ Video: {videoUrl}
     '''
     return status
 
+# sets up stream and streamlistener
 try:
     streamListener = tweepy.StreamListener(api)
     streamListener.on_connect = lambda: print("Connected!")
