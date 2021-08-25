@@ -62,25 +62,7 @@ Location: {geoLocation}
 Source: {source}
 Video: {videoUrl}
     '''
-    print(status)
     return status
-
-    '''
-    name = dish['strMeal']
-    dishType = dish['strCategory']
-    geoLocation = dish['strArea']
-    instructions = dish['strInstructions']
-    imageUrl = dish['strMealThumb']
-    videoUrl = dish['strYoutube']
-    ingredients = [{dish[f'strIngredient{i}']:dish[f'strMeasure{i}']}
-               for i in range(1, 21) if dish[f'strIngredient{i}'] != ""]
-    source = dish['strSource']
-    meal = dict(name=name, dishType=dishType, geoLocation=geoLocation, ingredients=ingredients, instructions=instructions, imageUrl=imageUrl, videoUrl=videoUrl, source=source)
-    return meal
-    
-    
-    
-    '''
 
 try:
     streamListener = tweepy.StreamListener(api)
